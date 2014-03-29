@@ -33,7 +33,10 @@ path {
 .stopped {
   fill: rgb(40,0,4);
 }
+.desc {
+  font-size: 12px;
+  line-height: 12px;
+}
 a {
   text-decoration: none;
-  font-size: 14px;
 }
