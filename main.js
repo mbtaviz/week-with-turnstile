@@ -216,8 +216,9 @@
           });
           svg.selectAll('path')
             .attr('class', classFunc)
-            .transition()
-            .duration(delay)
+            // possibly too disorienting - leave out
+            // .transition()
+            // .duration(delay)
             .attr('d', lineFunction);
         }
       });
