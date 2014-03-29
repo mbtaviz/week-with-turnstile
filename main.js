@@ -38,7 +38,7 @@
           left: m
         };
         var outerWidth = (window.innerWidth || 300) - 10,
-            outerHeight = (window.innerHeight || 300) - 40,
+            outerHeight = (window.innerHeight || 300) - 60,
             width = outerWidth - margin.left - margin.right,
             height = outerHeight - margin.top - margin.bottom;
         var xScale = width / (xRange[1] - xRange[0]);
