@@ -1,0 +1,35 @@
+/* Add styles here */
+
+body {
+  margin: 0 auto;
+  width: 100%;
+  text-align: center;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  color: #333;
+  font-size: 20px;
+}
+path {
+  /*shape-rendering: crispEdges;*/
+  /*transition: fill .25s ease;*/
+  /*For debugging geometry issues:*/
+  /*fill-opacity: 0.5;*/
+  stroke-width: 0.5;
+  stroke: black;
+}
+
+.nodata {
+  fill: #ccc;
+}
+.ok {
+  fill: rgb(22,167,34);
+}
+.slowing {
+  fill: rgb(253,158,59);
+}
+.slow {
+  fill: rgb(251,0,7);
+}
+.stopped {
+  fill: rgb(40,0,4);
+}
