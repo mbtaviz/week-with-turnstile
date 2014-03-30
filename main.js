@@ -180,7 +180,7 @@
 
       d3.json('historical.json')
       .on('progress', function() {
-        var pct = Math.round(100 * d3.event.loaded / 6345532);
+        var pct = Math.round(100 * d3.event.loaded / 6662711);
         time.text("Loading... " + pct + "%");
       })
       .get(function(error, inOrder) {
