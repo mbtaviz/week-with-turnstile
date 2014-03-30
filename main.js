@@ -37,18 +37,18 @@
           bottom: m,
           left: m
         };
-        var outerWidth = (window.innerWidth || 300) - 10,
+        var outerWidth = Math.min(window.innerWidth || 300, 500) - 10,
             outerHeight = (window.innerHeight || 300) - 60,
             width = outerWidth - margin.left - margin.right,
             height = outerHeight - margin.top - margin.bottom;
         var xScale = width / (xRange[1] - xRange[0]);
         var yScale = height / (yRange[1] - yRange[0]);
-        var scale = Math.min(xScale, yScale);
+        var scale = xScale;
         dist = 0.3 * scale;
-        distScale = d3.scale.sqrt()
-          .domain([0, 170])
-          .range([0.1 * scale, 0.3 * scale]).clamp(true);
-        endDotRadius = 0.35 * scale;
+        distScale = d3.scale.linear()
+          .domain([0, 100])
+          .range([0.15 * scale, 0.4 * scale]).clamp(true);
+        endDotRadius = 0.2 * scale;
         inputData.nodes.forEach(function (data) {
           data.pos = [data.x * scale, data.y * scale];
         });
@@ -85,7 +85,7 @@
                 outgoing: getLeaving(d.target)
               };
             })
-            .attr('class', classFunc)
+            .attr('fill', colorFunc)
             .attr('d', lineFunction);
 
         lines.append('g')
@@ -100,7 +100,7 @@
                 outgoing: getLeaving(d.source)
               };
             })
-            .attr('class', classFunc)
+            .attr('fill', colorFunc)
             .attr('d', lineFunction);
 
         function getEntering(node) {
@@ -159,29 +159,31 @@
         dot('place-ogmnl', "#E87200");
         return svg;
       }
-
-      function classFunc(d) {
+      var colorScale = d3.scale.pow().exponent(2)
+          .domain([1.2, 0.5, 0])
+          .range(['white', 'black', 'red']);
+      function colorFunc(d) {
         var speed = cache[d.ids];
-        var cls;
+        var color;
         if (speed === null || typeof speed === 'undefined') {
-          cls = "nodata";
-        } else if (speed > 0.75) {
-          cls = "ok";
-        } else if (speed > 0.5) {
-          cls = "slowing";
-        } else if (speed > 0.25) {
-          cls = "slow";
+          color = 'white';
         } else {
-          cls = "stopped";
+          color = colorScale(speed);
         }
-        return cls;
+        return color;
       }
 
       draw();
       d3.select(window).on('resize', draw);
 
       var time = d3.select('#time');
-      d3.json('historical.json', function (inOrder) {
+
+      d3.json('historical.json')
+      .on('progress', function() {
+        var pct = Math.round(100 * d3.event.loaded / 6345532);
+        time.text("Loading... " + pct + "%");
+      })
+      .get(function(error, inOrder) {
         var i = 0;
         setTimeout(function check() {
           if (i < inOrder.length) {
@@ -215,7 +217,7 @@
             update(link.target.id, link.source.id);
           });
           svg.selectAll('path')
-            .attr('class', classFunc)
+            .attr('fill', colorFunc)
             // possibly too disorienting - leave out
             // .transition()
             // .duration(delay)
@@ -354,7 +356,7 @@
   function place(selection) {
     selection
       .append('path')
-      .attr('class', classFunc)
+      .attr('fill', colorFunc)
       .attr('d', lineFunction);
   }
 

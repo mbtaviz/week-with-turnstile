@@ -9,15 +9,19 @@ body {
   color: #333;
   font-size: 20px;
 }
+.info {
+  max-width: 500px;
+  margin: 1em auto;
+  font-size: 12px;
+  color: #777;
+}
 path {
-  /*shape-rendering: crispEdges;*/
-  /*transition: fill .25s ease;*/
-  /*For debugging geometry issues:*/
-  /*fill-opacity: 0.5;*/
-  stroke-width: 0.5;
+  stroke-width: 0.2;
   stroke: black;
 }
-
+circle {
+  fill-opacity: 0.7;
+}
 .nodata {
   fill: #ccc;
 }
