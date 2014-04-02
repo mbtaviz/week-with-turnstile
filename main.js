@@ -180,47 +180,45 @@
 
       d3.json('historical.json')
       .on('progress', function() {
-        var pct = Math.round(100 * d3.event.loaded / 6662711);
+        var pct = Math.round(100 * d3.event.loaded / 6691778);
         time.text("Loading... " + pct + "%");
       })
       .get(function(error, inOrder) {
         var i = 0;
         setTimeout(function check() {
           if (i < inOrder.length) {
-            crowd = inOrder[i].crowds;
-            inOrder[i].delays.forEach(render);
+            render(inOrder[i]);
             i++;
             setTimeout(check, delay);
           }
         }, 0);
 
-        function render(body) {
-          var byPair = body.byPair;
-          var line = body.line;
+        function render(data) {
+          time.text(moment(data.time).format('dddd M/D h:mm a'));
+          crowd = data.ins;
 
-          time.text(moment(body.time).format('dddd M/D h:mm a'));
-
-          function update(FROM, TO) {
-            var key = FROM + "|" + TO;
-            if (byPair.hasOwnProperty(key)) {
-              var diff = byPair[key];
-              var median = medians[key];
-              var speed = median / diff;
-              cache[key] = speed;
-            } else if (line === idToLine[key]) {
-              cache[key] = null;
+          data.lines.forEach(function (datum) {
+            var line = datum.line;
+            var byPair = datum.byPair;
+            function update(FROM, TO) {
+              var key = FROM + "|" + TO;
+              if (byPair.hasOwnProperty(key)) {
+                var diff = byPair[key];
+                var median = medians[key];
+                var speed = median / diff;
+                cache[key] = speed;
+              } else if (line === idToLine[key]) {
+                cache[key] = null;
+              }
             }
-          }
 
-          inputData.links.forEach(function (link) {
-            update(link.source.id, link.target.id);
-            update(link.target.id, link.source.id);
+            inputData.links.forEach(function (link) {
+              update(link.source.id, link.target.id);
+              update(link.target.id, link.source.id);
+            });
           });
           svg.selectAll('path')
             .attr('fill', colorFunc)
-            // possibly too disorienting - leave out
-            // .transition()
-            // .duration(delay)
             .attr('d', lineFunction);
         }
       });
