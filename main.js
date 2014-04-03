@@ -47,7 +47,7 @@
         var scale = Math.min(xScale, yScale);
         dist = 0.3 * scale;
         distScale = d3.scale.linear()
-          .domain([0, 100])
+          .domain([0, 75])
           .range([0.15 * scale, 0.4 * scale]);
         endDotRadius = 0.2 * scale;
         inputData.nodes.forEach(function (data) {
