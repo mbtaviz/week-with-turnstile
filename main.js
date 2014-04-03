@@ -7,13 +7,14 @@
       cache = {},
       idToLine = {},
       crowd = {},
-      distScale;
+      distScale,
+      spider = window.location.search === '?flat' ? window.spider2 : window.spider;
 
   d3.json('medians.json', function (medians) {
     d3.json('data.json', function (inputData) {
       inputData.nodes.forEach(function (data) {
-        data.x = window.spider[data.id][0];
-        data.y = window.spider[data.id][1];
+        data.x = spider[data.id][0];
+        data.y = spider[data.id][1];
       });
       inputData.links.forEach(function (link) {
         link.source = inputData.nodes[link.source];
@@ -30,24 +31,24 @@
 
       var svg;
       function draw () {
-        var m = Math.min(window.innerWidth || 300, window.innerHeight || 300) / 20;
+        var outerWidth = Math.min(window.innerWidth || 300, 500) - 10,
+            outerHeight = 450;
+        var m = Math.min(outerWidth, outerHeight) / 20;
         margin = {
           top: m,
           right: m,
           bottom: m,
           left: m
         };
-        var outerWidth = Math.min(window.innerWidth || 300, 500) - 10,
-            outerHeight = (window.innerHeight || 300) - 60,
-            width = outerWidth - margin.left - margin.right,
+        var width = outerWidth - margin.left - margin.right,
             height = outerHeight - margin.top - margin.bottom;
         var xScale = width / (xRange[1] - xRange[0]);
         var yScale = height / (yRange[1] - yRange[0]);
-        var scale = xScale;
+        var scale = Math.min(xScale, yScale);
         dist = 0.3 * scale;
         distScale = d3.scale.linear()
           .domain([0, 100])
-          .range([0.15 * scale, 0.4 * scale]).clamp(true);
+          .range([0.15 * scale, 0.4 * scale]);
         endDotRadius = 0.2 * scale;
         inputData.nodes.forEach(function (data) {
           data.pos = [data.x * scale, data.y * scale];
@@ -144,8 +145,8 @@
         // line color circles
         function dot(id, color) {
           svg.append('circle')
-            .attr('cx', scale * window.spider[id][0])
-            .attr('cy', scale * window.spider[id][1])
+            .attr('cx', scale * spider[id][0])
+            .attr('cy', scale * spider[id][1])
             .attr('fill', color)
             .attr('r', endDotRadius)
             .attr('stroke', "none");
