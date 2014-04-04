@@ -83,11 +83,16 @@
                 line: d.line,
                 ids: d.source.id + '|' + d.target.id,
                 segment: [d.source.pos, d.target.pos],
-                outgoing: getLeaving(d.target)
+                outgoing: getLeaving(d.target),
+                name: d.source.name + " to " + d.target.name
               };
             })
             .attr('fill', colorFunc)
-            .attr('d', lineFunction);
+            .attr('d', lineFunction)
+          .append('title')
+            .text(function (d) {
+              return d.name;
+            });
 
         lines.append('g')
             .attr('class', function (d) { return d.line + ' ' + d.target.id + '-' + d.source.id; })
@@ -98,11 +103,16 @@
                 line: d.line,
                 ids: d.target.id + '|' + d.source.id,
                 segment: [d.target.pos, d.source.pos],
-                outgoing: getLeaving(d.source)
+                outgoing: getLeaving(d.source),
+                name: d.source.name + " to " + d.target.name
               };
             })
             .attr('fill', colorFunc)
-            .attr('d', lineFunction);
+            .attr('d', lineFunction)
+          .append('title')
+            .text(function (d) {
+              return d.name;
+            });
 
         function getEntering(node) {
           return node.links.map(function (n) {
