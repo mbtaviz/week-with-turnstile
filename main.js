@@ -104,7 +104,7 @@
                 ids: d.target.id + '|' + d.source.id,
                 segment: [d.target.pos, d.source.pos],
                 outgoing: getLeaving(d.source),
-                name: d.source.name + " to " + d.target.name
+                name: d.target.name + " to " + d.source.name
               };
             })
             .attr('fill', colorFunc)
