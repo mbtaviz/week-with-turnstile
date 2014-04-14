@@ -6,16 +6,18 @@
       delay = 100,
       cache = {},
       idToLine = {},
-      crowd = {},
+      whiskers = [],
+      entries = {},
+      exits = {},
+      intersections = {},
+      nodesById = {},
+      scale = 0,
       distScale,
-      spider = window.location.search === '?flat' ? window.spider2 : window.spider;
+      whiskerScale,
+      spider = window.location.search.indexOf('flat') > -1 ? window.spider2 : window.spider;
 
   d3.json('medians.json', function (medians) {
     d3.json('data.json', function (inputData) {
-      inputData.nodes.forEach(function (data) {
-        data.x = spider[data.id][0];
-        data.y = spider[data.id][1];
-      });
       inputData.links.forEach(function (link) {
         link.source = inputData.nodes[link.source];
         link.target = inputData.nodes[link.target];
@@ -25,6 +27,25 @@
         link.source.links.splice(0, 0, link);
         idToLine[link.source.id + '|' + link.target.id] = link.line;
         idToLine[link.target.id + '|' + link.source.id] = link.line;
+        whiskers.push({
+          source: link.source.id,
+          target: link.target.id
+        });
+        whiskers.push({
+          source: link.target.id,
+          target: link.source.id
+        });
+      });
+      inputData.nodes.forEach(function (data) {
+        data.x = spider[data.id][0];
+        data.y = spider[data.id][1];
+        nodesById[data.id] = data;
+        if (data.links.length === 1) {
+          whiskers.push({
+            target: data.id,
+            source: "void"
+          });
+        }
       });
       var xRange = d3.extent(inputData.nodes, function (d) { return d.x; });
       var yRange = d3.extent(inputData.nodes, function (d) { return d.y; });
@@ -44,11 +65,14 @@
             height = outerHeight - margin.top - margin.bottom;
         var xScale = width / (xRange[1] - xRange[0]);
         var yScale = height / (yRange[1] - yRange[0]);
-        var scale = Math.min(xScale, yScale);
+        scale = Math.min(xScale, yScale);
         dist = 0.3 * scale;
         distScale = d3.scale.linear()
-          .domain([0, 75])
+          .domain([0, 100])
           .range([0.15 * scale, 0.4 * scale]);
+        whiskerScale = d3.scale.linear()
+          .domain([0, 100])
+          .range([0.0 * scale, 0.4 * scale]);
         endDotRadius = 0.2 * scale;
         inputData.nodes.forEach(function (data) {
           data.pos = [data.x * scale, data.y * scale];
@@ -59,15 +83,13 @@
             .attr('height', scale * yRange[1] + margin.top + margin.bottom)
           .append('g')
             .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-        svg.selectAll('.station')
-            .data(inputData.nodes)
+        d3.select("#chart svg").append('g')
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+          .selectAll('.whisker')
+            .data(whiskers, function (d) { return d.source + "|" + d.target; })
             .enter()
-          .append('circle')
-            .attr('class', function (d) { return 'station ' + d.id; })
-            .attr('cx', function (d) { return d.pos[0]; })
-            .attr('cy', function (d) { return d.pos[1]; })
-            .attr('r', 0);
+          .append('line')
+            .attr('class', function (d) { return 'whisker ' + d.source + '-' + d.target; });
         var lines = svg.selectAll('.connect')
             .data(inputData.links)
             .enter()
@@ -191,7 +213,7 @@
 
       d3.json('historical.json')
       .on('progress', function() {
-        var pct = Math.round(100 * d3.event.loaded / 6691778);
+        var pct = Math.round(100 * d3.event.loaded / 7907504);
         time.text("Loading... " + pct + "%");
       })
       .get(function(error, inOrder) {
@@ -206,7 +228,8 @@
 
         function render(data) {
           time.text(moment(data.time).format('dddd M/D h:mm a'));
-          crowd = data.ins;
+          entries = data.ins;
+          exits = data.outs;
 
           data.lines.forEach(function (datum) {
             var line = datum.line;
@@ -231,6 +254,10 @@
           svg.selectAll('path')
             .attr('fill', colorFunc)
             .attr('d', lineFunction);
+          if (window.location.search.indexOf('whisker') > -1) {
+            d3.selectAll('.whisker')
+              .call(exitWhiskers);
+          }
         }
       });
     });
@@ -290,7 +317,7 @@
   }
   function offsetPoints(d) {
     var split = d.ids.split("|").map(function (a) {
-      var val = crowd[a];
+      var val = entries[a];
       return distScale(val || 0);
     });
     var p1 = d.segment[0];
@@ -339,6 +366,25 @@
   function length (a, b) {
     return Math.sqrt(Math.pow(b[1] - a[1], 2) + Math.pow(b[0] - a[0], 2));
   }
+  function exitWhiskers(selection) {
+    selection
+      .each(function (d) {
+        var originalNode = nodesById[d.source] || nodesById[d.target];
+        var originalPoint = [originalNode.x * scale, originalNode.y * scale];
+        d.whiskerStart = intersections[d.source][d.target];
+        var angle = Math.atan2(d.whiskerStart[1] - originalPoint[1], d.whiskerStart[0] - originalPoint[0]);
+        var origDist = Math.sqrt(Math.pow(originalPoint[0] - d.whiskerStart[0], 2) + Math.pow(originalPoint[1] - d.whiskerStart[1], 2))
+        var dist = whiskerScale(exits[d.source] || exits[d.target] || 0);
+        d.whiskerEnd = [
+          d.whiskerStart[0] + dist * Math.cos(angle),
+          d.whiskerStart[1] + dist * Math.sin(angle),
+        ];
+      })
+      .attr('x1', function (d) { return d.whiskerStart[0]; })
+      .attr('y1', function (d) { return d.whiskerStart[1]; })
+      .attr('x2', function (d) { return d.whiskerEnd[0]; })
+      .attr('y2', function (d) { return d.whiskerEnd[1]; });
+  }
   function lineFunction (d) {
     var p1 = d.segment[0];
     var p2 = d.segment[1];
@@ -359,7 +405,16 @@
       var newP4 = intersect(offsets, incomingPoints);
       if (newP4) { p4 = newP4; }
     }
-
+    var ids = d.ids.split("|");
+    var src = ids[0];
+    var dest = ids[1];
+    intersections[src] = intersections[src] || {};
+    intersections[dest] = intersections[dest] || {};
+    intersections["void"] = intersections["void"] || {};
+    intersections[dest][src] = p3;
+    if (d.incoming.length === 1) {
+      intersections["void"][src] = p4;
+    }
     return lineMapping([p1, p2, p3, p4, p1]);
   }
   function place(selection) {

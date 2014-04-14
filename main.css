@@ -38,6 +38,11 @@ path {
   font-size: 12px;
   line-height: 12px;
 }
+.whisker {
+  stroke-width: 0.5px;
+  fill: black;
+  stroke: black;
+}
 a {
   text-decoration: none;
 }
